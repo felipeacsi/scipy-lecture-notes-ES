@@ -657,23 +657,19 @@ Copiando el docstring (documentación) y otros atributos de la función original
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Cuando un decorador devuelve una nueva función que reemplaza a
-la función original nos encontramos como consecuencia que, desafortunadamente,
+la función original nos encontramos que, desafortunadamente,
 hemos perdido el nombre original de la función, el docstring original y la lista 
 de argumentos originales. Podríamos traspasar todos esos atributos de la función original
-
-When a new function is returned by the decorator to replace the
-original function, an unfortunate consequence is that the original
-function name, the original docstring, the original argument list are
-lost. Those attributes of the original function can partially be "transplanted"
-to the new function by setting ``__doc__`` (the docstring), ``__module__``
-and ``__name__`` (the full name of the function), and
-``__annotations__`` (extra information about arguments and the return
-value of the function available in Python 3). This can be done
-automatically by using `functools.update_wrapper`.
+a la nueva función poniendo ``__doc__`` (el docstring), ``__module__``
+y ``__name__`` (el nombre completo de la función) y
+``__annotations__`` (información extra sobre los argumentos y los valores
+de retorno de la función disponible en Python 3). Esto se puede hacer de forma automática
+usando `functools.update_wrapper`.
 
 .. sidebar:: `functools.update_wrapper(wrapper, wrapped) <functools.update_wrapper>`
 
-   "Update a wrapper function to look like the wrapped function."
+   "Actualiza una función envoltorio (wrapper) para que se parezca a la función que 
+    está envolviendo (wrapped function)."
 
 >>> import functools
 >>> def better_replacing_decorator_with_args(arg):
@@ -697,39 +693,38 @@ doing decoration, abc
 >>> print function.__doc__
 extensive documentation
 
-One important thing is missing from the list of attributes which can
-be copied to the replacement function: the argument list. The default
-values for arguments can be modified through the ``__defaults__``,
-``__kwdefaults__`` attributes, but unfortunately the argument list
-itself cannot be set as an attribute. This means that
-``help(function)`` will display a useless argument list which will be
-confusing for the user of the function. An effective but ugly way
-around this problem is to create the wrapper dynamically, using
-``eval``. This can be automated by using the external ``decorator``
-module. It provides support for the ``decorator`` decorator, which takes a
-wrapper and turns it into a decorator which preserves the function
-signature.
+Una cosa importante que echamos en falta en la lista de atributos y que
+podría ser copiada en la función de reemplazo: la lista de argumentos.
+Los valores por defecto para los argumentos se pueden modificar a través
+de los atributos ``__defaults__``, ``__kwdefaults__`` pero, desafortunadamente,
+la lista de argumentos no puede ser un atributo por si misma. Esto significa que
+``help(function)`` mostrará una lista de argumentos poco útil que será confusa para
+el usuario de la función. Una forma fea pero efectiva para sortear este problema
+sería crear un ``wrapper`` de forma dinámica usando ``eval``. Esto se podría
+automatizar usando el módulo externo ``decorator``. Este módulo proporciona
+soporte para el decorador ``decorator``, que toma un ``wrapper`` y lo convierte
+en un decorador que preserva la ``firma`` de la función.
 
-To sum things up, decorators should always use ``functools.update_wrapper``
-or some other means of copying function attributes.
+Resumiendo, los decoradores deberían usar siempre ``functools.update_wrapper``
+o cualquier otra manera de poder copiar los atributos de las funciones.
 
-Examples in the standard library
+Ejemplos en la librería estándar
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, it should be mentioned that there's a number of useful
-decorators available in the standard library. There are three decorators
-which really form a part of the language:
+Primero de todo deberíamos destacar el hecho de que hay muchos
+decoradores útiles en la librería estándar. Hay tres decoradores
+que son parte importante del lenguaje:
 
-- `classmethod` causes a method to become a "class method",
-  which means that it can be invoked without creating an instance of
-  the class. When a normal method is invoked, the interpreter inserts
-  the instance object as the first positional parameter,
-  ``self``. When a class method is invoked, the class itself is given
-  as the first parameter, often called ``cls``.
+- `classmethod` provoca que un método se convierta en una "class method",
+  que significa que un método pueda ser invocado sin necesidad de crear
+  una instancia de la clase. Cuando se invoca un método normal, el intérprete
+  inserta el objeto instancia como el primer parámetro posicional ``self``. 
+  Cuando se invoca un ``class method``, la clase misma será el primer parámetro,
+  a menudo llamado ``cls``.
 
-  Class methods are still accessible through the class' namespace, so
-  they don't pollute the module's namespace. Class methods can be used
-  to provide alternative constructors::
+  Los ``Class methods`` siguen siendo accesibles a través del ``namespace`` de la clase
+  y de esa forma no se contamina el ``namespace`` del módulo. Los ``Class methods``
+  pueden ser usados como contructores alternativos::
 
     class Array(object):
         def __init__(self, data):
@@ -740,18 +735,18 @@ which really form a part of the language:
             data = numpy.load(file)
             return cls(data)
 
-  This is cleaner then using a multitude of flags to ``__init__``.
+  Esta forma es más limpia que usar múltiples ``flags`` para ``__init__``.
 
-- `staticmethod` is applied to methods to make them "static",
-  i.e. basically a normal function, but accessible through the class
-  namespace. This can be useful when the function is only needed
-  inside this class (its name would then be prefixed with ``_``), or when we
-  want the user to think of the method as connected to the class,
-  despite an implementation which doesn't require this.
+- `staticmethod` se aplica a métodos para convertirlos en estáticos,
+  i.e. básicamente una función normal pero accessibles a través del 
+  namespace de la clase. Esto resulta útil cuando la función solo es necesaria
+  dentro de la clase (su nombre estaría prefijado con ``_``) o cuando queremos 
+  que el usuario piense en el método conectado/relacionado con su clase, a pesar
+  de que esto no es un requerimiento de su implementación.
 
-- `property` is the pythonic answer to the problem of getters
-  and setters. A method decorated with ``property`` becomes a getter
-  which is automatically called on attribute access.
+- `property` es la respuesta pythónica al problema de los ``getters`` y los 
+  ``setters``. Un método decorado con ``property`` se convierte en un ``getter``
+  que es invocado automáticamente en el acceso al atributo.
 
   >>> class A(object):
   ...   @property
@@ -763,14 +758,14 @@ which really form a part of the language:
   >>> A().a
   'a value'
 
-  In this example, ``A.a`` is an read-only attribute. It is also
-  documented: ``help(A)`` includes the docstring for attribute ``a``
-  taken from the getter method. Defining ``a`` as a property allows it
-  to be a calculated on the fly, and has the side effect of making it
-  read-only, because no setter is defined.
+  En este ejemplo, ``A.a`` es un atributo de solo lectura. Además está documentado:
+  ``help(A)`` incluye el docstring para el atributo ``a``
+  tomado del método ``getter``. Si definimos ``a`` como una propiedad podremos calcularla
+  al vuelo y tiene el efecto colateral de hacerla de solo lectura ya que no se define
+  ningún ``setter``.
 
-  To have a setter and a getter, two methods are required,
-  obviously. Since Python 2.6 the following syntax is preferred::
+  Para disponer de un ``setter`` y un ``getter``se requieren dos métodos,
+  obviamente. A partir de Python 2.6 la sintaxis de preferencia sería la siguiente::
 
     class Rectangle(object):
         def __init__(self, edge):
@@ -788,23 +783,21 @@ which really form a part of the language:
         def area(self, area):
             self.edge = area ** 0.5
 
-  The way that this works, is that the ``property`` decorator replaces
-  the getter method with a property object. This object in turn has
-  three methods, ``getter``, ``setter``, and ``deleter``, which can be
-  used as decorators. Their job is to set the getter, setter and
-  deleter of the property object (stored as attributes ``fget``,
-  ``fset``, and ``fdel``). The getter can be set like in the example
-  above, when creating the object. When defining the setter, we
-  already have the property object under ``area``, and we add the
-  setter to it by using the ``setter`` method. All this happens when
-  we are creating the class.
+  La forma de funcionar de esto sería la siguiente: el decorador ``property`` 
+  reemplaza el método ``getter`` con un objeto ``property``. Este objeto dispone de
+  tres métodos, ``getter``, ``setter`` y ``deleter``, que podrían ser usados
+  como decoradores. Su trabajo es establecer el ``getter``, el ``setter`` 
+  y el ``deleter`` del objeto ``property`` (almacenados como los atributos ``fget``,
+  ``fset`` y ``fdel``). El ``getter`` se puede establecer como en el ejemplo
+  de más arriba, cuando se crea el objeto. Cuando se define el `` setter`` ya se dispone
+  del objeto ``property`` en ``area`` y le añadimos el ``setter`` usando el método ``setter``. 
+  Todo esto ocurre cuando estamos creando la clase.
 
-  Afterwards, when an instance of the class has been created, the
-  property object is special. When the interpreter executes attribute
-  access, assignment, or deletion, the job is delegated to the methods
-  of the property object.
+  Después de que se haya creado una instancia de la clase, el objeto ``property`` 
+  es un objeto especial. Cuando el intérprete ejecuta el acceso al atributo, la asignación o la
+  eliminación el trabajo se delega a los métodos del objeto ``property``.
 
-  To make everything crystal clear, let's define a "debug" example::
+  Para clarificar lo anterior vamos a definir un ejemplo "debug"::
 
     >>> class D(object):
     ...    @property
@@ -837,19 +830,18 @@ which really form a part of the language:
     getting 1
     1
 
-  Properties are a bit of a stretch for the decorator syntax. One of the
-  premises of the decorator syntax --- that the name is not duplicated
-  --- is violated, but nothing better has been invented so far. It is
-  just good style to use the same name for the getter, setter, and
-  deleter methods.
+  Hay que echarle un poco de imaginación para relacionar las ``Properties`` y la sintaxis de un decorador. 
+  Se viola una de las premisas de la sintaxis de los decoradores --- en donde el nombre no está duplicado
+  --- pero no se ha conseguido inventar nada mejor. Es un buen uso usar el mismo nombre para los métodos
+  ``getter``, ``setter`` y ``deleter``.
 
-  .. property documentation mentions that this only works for
-     old-style classes, but this seems to be an error.
+  .. en la documentación de ``property`` se menciona que esto solo funciona para las
+     clases antiguas (old-style) pero parece que alquien ha cometido un error.
 
-Some newer examples include:
+Algunos ejemplos más nuevos incluirían:
 
-- `functools.lru_cache` memoizes an arbitrary function
-  maintaining a limited cache of arguments:answer pairs (Python 3.2)
+- `functools.lru_cache` memoriza una función arbitraria
+  manteniendo una ``caché`` limitada de argumentos:respuesta pares (Python 3.2)
 
 - `functools.total_ordering` is a class decorator which fills in
   missing ordering methods
@@ -859,16 +851,16 @@ Some newer examples include:
 
 
 ..
-  - `packaging.pypi.simple.socket_timeout` (in Python 3.3) adds
-  a socket timeout when retrieving data through a socket.
+  - `packaging.pypi.simple.socket_timeout` (en Python 3.3) agrega un ``socket`` 
+     ``timeout`` cuando se descargan datos a través de un ``socket``.
 
 
-Deprecation of functions
-^^^^^^^^^^^^^^^^^^^^^^^^
+Funciones obsoletas (Deprecation of functions)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's say we want to print a deprecation warning on stderr on the
-first invocation of a function we don't like anymore. If we don't want
-to modify the function, we can use a decorator::
+Digamos que queremos mostrar un aviso de que una función será discontinuada (``deprecating``)
+en ``stderr`` cuando invoquemos por primera vez una función que ya no queremos. Si no queremos
+modificar la función podríamos usar un decorador::
 
   class deprecated(object):
       """Print a deprecation warning once on first use of the function.
@@ -891,7 +883,7 @@ to modify the function, we can use a decorator::
 
 .. TODO: use update_wrapper here
 
-It can also be implemented as a function::
+Esto se puede implementar también como una función::
 
   def deprecated(func):
       """Print a deprecation warning once on first use of the function.
@@ -910,12 +902,12 @@ It can also be implemented as a function::
           return func(*args, **kwargs)
       return wrapper
 
-A ``while``-loop removing decorator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Un decorador para eliminar bucles ``while``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's say we have function which returns a lists of things, and this
-list created by running a loop. If we don't know how many objects will
-be needed, the standard way to do this is something like::
+Pensemos en una función que nos devuelve una lista de cosas mediante un bucle
+while dentro de la función. Si desconocemos cuantos objetos serán necesarios, 
+una forma estándar de hacer esto sería::
 
   def find_answers():
       answers = []
@@ -926,20 +918,20 @@ be needed, the standard way to do this is something like::
 	  answers.append(ans)
       return answers
 
-This is fine, as long as the body of the loop is fairly compact. Once
-it becomes more complicated, as often happens in real code, this
-becomes pretty unreadable. We could simplify this by using ``yield``
-statements, but then the user would have to explicitly call
-``list(find_answers())``.
+Esto es correcto mientras el cuerpo del bucle sea compacto. Desde el momento en
+que el bucle se convierte en algo más complejo, como a menudo sucede en
+el código real, tendremos algo poco legible. Podríamos simplificar eso usando
+una delcaración ``yield`` pero entonces el usuario tendría que hacer una llamada
+explícita a ``list(find_answers())``.
 
-We can define a decorator which constructs the list for us::
+Podemos definir un decorador que nos contruya la lista::
 
   def vectorized(generator_func):
       def wrapper(*args, **kwargs):
 	  return list(generator_func(*args, **kwargs))
       return functools.update_wrapper(wrapper, generator_func)
 
-Our function then becomes::
+Y nuestra función se convertirá en::
 
   @vectorized
   def find_answers():
@@ -949,12 +941,12 @@ Our function then becomes::
 	      break
 	  yield ans
 
-A plugin registration system
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Un sistema de registro de ``plugins``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a class decorator which doesn't modify the class, but just
-puts it in a global registry. It falls into the category of decorators
-returning the original object::
+Esta es una clase decoradora que no modifica la clase, simplemente la coloca en un 
+registro global. Pertenece a la categoría de decoradores que 
+devuelven la función original::
 
   class WordProcessor(object):
       PLUGINS = []
@@ -972,24 +964,23 @@ returning the original object::
       def cleanup(self, text):
           return text.replace('&mdash;', u'\N{em dash}')
 
-Here we use a decorator to decentralise the registration of
-plugins. We call our decorator with a noun, instead of a verb, because
-we use it to declare that our class is a plugin for
-``WordProcessor``. Method ``plugin`` simply appends the class to the
-list of plugins.
+Aquí hemos usado un decorador para descentralizar el registro de 
+plugins. Llamamos a nuestro decorador con un nombre en lugar de con un verbo ya que lo usamos
+para declarar que nuestra clase es un plugin para ``WordProcessor``. El método 
+``plugin`` simplemente anexa la clase a la lista de plugins.
 
-A word about the plugin itself: it replaces HTML entity for em-dash
-with a real Unicode em-dash character. It exploits the `unicode
-literal notation`_ to insert a character by using its name in the
-unicode database ("EM DASH"). If the Unicode character was inserted
-directly, it would be impossible to distinguish it from an en-dash in
-the source of a program.
+Unas palabras acerca del propio plugin: reemplaza entidades HTML para enfatizar el texto 
+(``em-dash``) con el carácter Unicode para enfatizar. Se aprovecha de la
+'notación literal unicode'_ para insertar un carácter usando su nombre en la 
+base de datos unicode ("EM DASH"). Si el carácter Unicode fue introducido
+directamente sería imposible distinguirlo de un texto enfatizado en la fuente
+del programa.
 
-.. _`unicode literal notation`:
+.. _`notación literal unicode`:
    http://docs.python.org/2.7/reference/lexical_analysis.html#string-literals
 
-More examples and reading
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Más ejemplos y lecturas recomendadas
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * :pep:`318` (function and method decorator syntax)
 * :pep:`3129` (class decorator syntax)
@@ -1007,18 +998,17 @@ More examples and reading
 .. _`Python Decorators III`: http://www.artima.com/weblogs/viewpost.jsp?thread=241209
 
 
-Context managers
-================
+Gestores de contexto (``context managers``)
+===========================================
 
-A context manager is an object with `__enter__ <object.__enter__>` and
-`__exit__ <object.__exit__>` methods which can be used in the :compound:`with`
-statement::
+Un gestor de contexto es un objeto con los métodos `__enter__ <object.__enter__>` y
+`__exit__ <object.__exit__>` los cuales pueden ser usados en la declaración
+:compound:`with`::
 
   with manager as var:
       do_something(var)
 
-is in the simplest case
-equivalent to ::
+es, en el más simple de los casos, equivalente a::
 
   var = manager.__enter__()
   try:
@@ -1026,28 +1016,27 @@ equivalent to ::
   finally:
       manager.__exit__()
 
-In other words, the context manager protocol defined in :pep:`343`
-permits the extraction of the boring part of a
-:compound:`try..except..finally <try>` structure into a separate class
-leaving only the interesting ``do_something`` block.
+En otras palabras, el protocolo de gestor de contextos definidos en el :pep:`343`
+permite la extracción de la parte aburrida de la estructura
+:compound:`try..except..finally <try>` en una clase separada manteniendo solo
+el bloque de interés ``do_something``.
 
-1. The `__enter__ <object.__enter__>` method is called first.  It can
-   return a value which will be assigned to ``var``.
-   The ``as``-part is optional: if it isn't present, the value
-   returned by ``__enter__`` is simply ignored.
-2. The block of code underneath ``with`` is executed.  Just like with
-   ``try`` clauses, it can either execute successfully to the end, or
-   it can :simple:`break`, :simple:`continue`` or :simple:`return`, or
-   it can throw an exception. Either way, after the block is finished,
-   the `__exit__ <object.__exit__>` method is called.
-   If an exception was thrown, the information about the exception is
-   passed to ``__exit__``, which is described below in the next
-   subsection. In the normal case, exceptions can be ignored, just
-   like in a ``finally`` clause, and will be rethrown after
-   ``__exit__`` is finished.
+1. Primero se llama al método `__enter__ <object.__enter__>`. Puede devolver un
+   valor que será asignado a ``var``.
+   La parte ``as`` es opcional: si no está presente, el valor devuelto
+   por ``__enter__`` será ignorado.
+2. El bloque de código bajo ``with`` se ejecutará.  Como si fueran condiciones
+   ``try``. Se podrá ejecutar con éxito hasta el final o, si algo falla, puede
+   :simple:`break`, :simple:`continue`` o :simple:`return` o
+   lanzar una excepción. Pase lo que pase, una vez que el bloque ha finalizado, se 
+   producirá una llamada al método `__exit__ <object.__exit__>`.
+   Si se lanzó una excepción, la información se manda a ``__exit__``, el cual se describe
+   en la siguiente subsección. En el caso normal, las excepciones podrían ser ignoradas
+   como si fueran una condición ``finally`` y serían relanzadas después de que
+   finalice ``__exit__``.
 
-Let's say we want to make sure that a file is closed immediately after
-we are done writing to it::
+Pensemos que nos queremos asegurar de que un fichero se ha cerrado inmediatamente
+después de que hayamos escrito en él::
 
   >>> class closing(object):
   ...   def __init__(self, obj):
@@ -1059,62 +1048,62 @@ we are done writing to it::
   >>> with closing(open('/tmp/file', 'w')) as f:
   ...   f.write('the contents\n')
 
-Here we have made sure that the ``f.close()`` is called when the
-``with`` block is exited. Since closing files is such a common
-operation, the support for this is already present in the ``file``
-class. It has an ``__exit__`` method which calls ``close`` and can be
-used as a context manager itself::
+Aquí hemos hecho que la llamada a ``f.close()`` se haga después de que se salga 
+del bloque ``with``. Ya que el cerrar ficheros es una operación tan común,
+el soporte para esto ya está presente en la clase ``file``. 
+Dispone de un método ``__exit__`` que llama a ``close`` y que podría
+ser usado como un gestor de contexto::
 
   >>> with open('/tmp/file', 'a') as f:
   ...   f.write('more contents\n')
 
-The common use for ``try..finally`` is releasing resources. Various
-different cases are implemented similarly: in the ``__enter__``
-phase the resource is acquired, in the ``__exit__`` phase it is
-released, and the exception, if thrown, is propagated. As with files,
-there's often a natural operation to perform after the object has been
-used and it is most convenient to have the support built in. With each
-release, Python provides support in more places:
+El uso común de ``try..finally`` está liberando recursos. Se han implementado
+diferentes casos: en la fase ``__enter__`` se adquiere el recurso y en la fase
+``__exit__``  se libera el recurso. La excepción, en el caso de que se lanzase,
+se propagaría. De la misma forma que lo visto para los ficheros, existen otras
+operaciones naturales a relaizar después de que el objeto haya sido usado y es más
+conveniente tener el soporte ya creado. Con cada lanzamiento, Python proporciona
+soporte en más lugares:
 
-* all file-like objects:
+* todos los objetos similares a ficheros:
 
-  - `file` |==>| automatically closed
+  - `file` |==>| cerrado automáticamente
   - `fileinput`, `tempfile` (py >= 3.2)
   - `bz2.BZ2File`, `gzip.GzipFile`,
     `tarfile.TarFile`, `zipfile.ZipFile`
-  - `ftplib`, `nntplib` |==>| close connection (py >= 3.2 or 3.3)
-* locks
+  - `ftplib`, `nntplib` |==>| cierra conexión (py >= 3.2 o 3.3)
+* cierres (`locks`)
 
-  - `multiprocessing.RLock` |==>| lock and unlock
+  - `multiprocessing.RLock` |==>| cierra y apertura
   - `multiprocessing.Semaphore`
-  - `memoryview` |==>| automatically release (py >= 3.2 and 2.7)
-* `decimal.localcontext` |==>| modify precision of computations temporarily
-* `_winreg.PyHKEY <_winreg.OpenKey>` |==>| open and close hive key
-* `warnings.catch_warnings` |==>| kill warnings temporarily
-* `contextlib.closing` |==>| the same as the example above, call ``close``
-* parallel programming
+  - `memoryview` |==>| lanzamiento automático (py >= 3.2 y 2.7)
+* `decimal.localcontext` |==>| modifica la precisión de cálculos de forma temporal
+* `_winreg.PyHKEY <_winreg.OpenKey>` |==>| abre y cierra la `hive key`
+* `warnings.catch_warnings` |==>| deshabilita temporalmente los avisos
+* `contextlib.closing` |==>| lo mismo que en el ejemplo de más arriba, llama a ``close``
+* programación paralela
 
-  - `concurrent.futures.ThreadPoolExecutor` |==>| invoke in parallel then kill thread pool (py >= 3.2)
-  - `concurrent.futures.ProcessPoolExecutor` |==>| invoke in parallel then kill process pool (py >= 3.2)
-  - `nogil` |==>| solve the GIL problem temporarily (cython only :( )
+  - `concurrent.futures.ThreadPoolExecutor` |==>| invocar en paralelo y después matar el `thread pool` (py >= 3.2)
+  - `concurrent.futures.ProcessPoolExecutor` |==>| invocar en paralelo y después matar el `process pool` (py >= 3.2)
+  - `nogil` |==>| evitar el problema del GIL temporalmente (solo en cython :( )
 
 
-Catching exceptions
-^^^^^^^^^^^^^^^^^^^
+Capturando excepciones
+^^^^^^^^^^^^^^^^^^^^^^
 
-When an exception is thrown in the ``with``-block, it is passed as
-arguments to ``__exit__``. Three arguments are used, the same as
-returned by :py:func:`sys.exc_info`: type, value, traceback. When no
-exception is thrown, ``None`` is used for all three arguments.  The
-context manager can "swallow" the exception by returning a true value
-from ``__exit__``. Exceptions can be easily ignored, because if
-``__exit__`` doesn't use ``return`` and just falls of the end,
-``None`` is returned, a false value, and therefore the exception is
-rethrown after ``__exit__`` is finished.
+Cuando se lanza una excepción en el bloque ``with``, es pasada como
+argumentos a ``__exit__``. Se usan tres argumentos, el mismo que es
+devuelto por :py:func:`sys.exc_info`: tipo, valor y `traceback`. Cuando no se lanza
+una excepción, se usará ``None`` para los tres argumentos.  El gestor de contexto
+puede "tragarse" la excepción devolviendo un valor real desde ``__exit__``. 
+Las excepciones son sencillas de ignorar ya que si
+``__exit__`` no usa ``return`` y llega la final se devolverá ``None``, 
+un valor falso, y, por tanto, la excepción será relanzada después de que
+finalice ``__exit__``.
 
-The ability to catch exceptions opens interesting possibilities. A
-classic example comes from unit-tests --- we want to make sure that
-some code throws the right kind of exception::
+La habilidad para capturar excepciones proporciones posibilidades muy interesantes. 
+Un ejemplo clásico proviene de ``unit-tests`` --- queremos asegurarnos que determinado
+código lanza determinada excepción de forma correcta::
 
   class assert_raises(object):
       # based on pytest and unittest.TestCase
@@ -1132,18 +1121,18 @@ some code throws the right kind of exception::
   with assert_raises(KeyError):
       {}['foo']
 
-Using generators to define context managers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Usindo generadores para definir gestores de contexto
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When discussing generators_, it was said that we prefer generators to
-iterators implemented as classes because they are shorter, sweeter,
-and the state is stored as local, not instance, variables. On the
-other hand, as described in `Bidirectional communication`_, the flow
-of data between the generator and its caller can be bidirectional.
-This includes exceptions, which can be thrown into the
-generator. We would like to implement context managers as special
-generator functions. In fact, the generator protocol was designed to
-support this use case.
+Cuando discutimos sobre los generadores_, se dijo que se se prefería los generadores
+a los iteradores implementados como clases debido a que son más cortos, más dulces
+y el estado se almacena como local, no instancias o variables.
+or otra parte, como se describió en `comunicación bidireccional`_,
+el flujo de datos entre el generador y el òbjeto`que lo llama puede ser
+bidireccional. Esto incluye las excepciones, las cuales pueden ser lanzadas
+en un generador. Nos gustaría implementar gestores de contexto como funciones generadoras
+especiales. De hecho, el protocolo de los generadores se diseño para
+soportar estos casos de uso.
 
 .. code-block:: python
 
@@ -1155,19 +1144,18 @@ support this use case.
       finally:
 	  <cleanup>
 
-The `contextlib.contextmanager` helper takes a generator and turns it
-into a context manager. The generator has to obey some rules which are
-enforced by the wrapper function --- most importantly it must
-``yield`` exactly once. The part before the ``yield`` is executed from
-``__enter__``, the block of code protected by the context manager is
-executed when the generator is suspended in ``yield``, and the rest is
-executed in ``__exit__``. If an exception is thrown, the interpreter
-hands it to the wrapper through ``__exit__`` arguments, and the
-wrapper function then throws it at the point of the ``yield``
-statement. Through the use of generators, the context manager is
-shorter and simpler.
+El `helper` `contextlib.contextmanager` toma un generador y lo convierte
+en un gestor de contenidos. El generador debe obedecer algunas normas
+forzadas por la función envoltorio (`wrapper`) --- debe usar
+``yield`` exactamente una única vez. La parte anterior al ``yield`` 
+se ejecuta a partir de ``__enter__``, el bloque de código protegido
+por el gestor de contexto se suspende en ``yield`` y el resto se
+ejecuta en ``__exit__``. Si se lanza una excepción, el intérprete se lo pasa
+al `wrapper` a través de los argumentos de ``__exit__`` y la función
+`wrapper` lo apunta hacia la declaración ``yield``. 
+A través del uso de generadores los gestores de contexto son más cortos y simples.
 
-Let's rewrite the ``closing`` example as a generator::
+Vamos a reescribir el ejemplo ``closing`` como un generador::
 
   @contextlib.contextmanager
   def closing(obj):
@@ -1176,7 +1164,7 @@ Let's rewrite the ``closing`` example as a generator::
       finally:
 	  obj.close()
 
-Let's rewrite the ``assert_raises`` example as a generator::
+Vamos a reescribir el ejemplo ``assert_raises`` como un generador::
 
   @contextlib.contextmanager
   def assert_raises(type):
@@ -1189,4 +1177,4 @@ Let's rewrite the ``assert_raises`` example as a generator::
       else:
 	  raise AssertionError('exception expected')
 
-Here we use a decorator to turn generator functions into context managers!
+¡Aquí usamos un decorador para transformar un generador en un gestor de contexto!
