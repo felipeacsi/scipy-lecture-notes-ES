@@ -1,47 +1,46 @@
 .. _mathematical_optimization:
 
-=======================================================
-Mathematical optimization: finding minima of functions
-=======================================================
+=========================================================
+Optimización matemática: búsqueda de mínimos en funciones
+=========================================================
 
-:authors: Gaël Varoquaux
+:autor: Gaël Varoquaux
 
-`Mathematical optimization
-<http://en.wikipedia.org/wiki/Mathematical_optimization>`_ deals with the
-problem of finding numerically minimums (or maximums or zeros) of
-a function. In this context, the function is called *cost function*, or
-*objective function*, or *energy*.
+La `optimización matemática
+<http://en.wikipedia.org/wiki/Mathematical_optimization>`_ se dedica a
+encontrar mínimos (o máximos o ceros) de una función. En este contexto,
+la función es llamada *de costo*, *de energía*, *función objetivo*, entre otros.
 
-Here, we are interested in using :mod:`scipy.optimize` for black-box
-optimization: we do not rely on the mathematical expression of the
-function that we are optimizing. Note that this expression can often be
-used for more efficient, non black-box, optimization.
+Aquí, estamos interesados en usar :mod:`scipy.optimize` para optimización
+de caja negra: no nos basamos en la expresión matemática de la función
+a optimizar. Ten en cuenta que esta expresión puede ser usada a menudo
+para optimización más eficiente que no es de caja negra.
 
-.. topic:: Prerequisites
+.. topic:: Prerrequisitos
 
     * Numpy, Scipy
     * IPython
     * matplotlib
 
-.. topic:: References
+.. topic:: Referencias
 
-   Mathematical optimization is very ... mathematical. If you want
-   performance, it really pays to read the books:
+   La optimización matemática es muy ... matemática. Si quieres buen
+   rendimiento, vale la pena leer los libros:
 
    * `Convex Optimization <http://www.stanford.edu/~boyd/cvxbook/>`_ 
-     by Boyd and Vandenberghe (pdf available free online).
+     de Boyd y Vandenberghe (pdf disponible gratuitamente en internet).
 
    * `Numerical Optimization
      <http://users.eecs.northwestern.edu/~nocedal/book/num-opt.html>`_, 
-     by Nocedal and Wright. Detailed reference on gradient descent methods.
+     de Nocedal y Wright. Referencia detallada sobre el método de descenso de gradiente (gradient descent).
 
    * `Practical Methods of Optimization
-     <http://www.amazon.com/gp/product/0471494631/ref=ox_sc_act_title_1?ie=UTF8&smid=ATVPDKIKX0DER>`_ by Fletcher: good at hand-waving explainations.
+     <http://www.amazon.com/gp/product/0471494631/ref=ox_sc_act_title_1?ie=UTF8&smid=ATVPDKIKX0DER>`_ de Fletcher: explicaciones buenas y didácticas.
 
 .. include:: ../../includes/big_toc_css.rst
 
 
-.. contents:: Chapters contents
+.. contents:: Contenidos del capítulo
    :local:
    :depth: 4
 
@@ -51,20 +50,20 @@ used for more efficient, non black-box, optimization.
   For doctesting
   >>> import numpy as np
 
-Knowing your problem
+Conociendo tu problema
 ======================
 
-Not all optimization problems are equal. Knowing your problem enables you
-to choose the right tool.
+No todos los problemas de optimización son iguales. Conocer tu problema
+te permite elegir la herramienta correcta.
 
-.. topic:: **Dimensionality of the problem**
+.. topic:: **Dimensión del problema**
 
-    The scale of an optimization problem is pretty much set by the
-    *dimensionality of the problem*, i.e. the number of scalar variables
-    on which the search is performed.
+    La escala de un problema de optimización está más o menos establecida
+    por la *dimensión del problema*, o sea el número de variables
+    escalares en las cuales se realiza la búsqueda.
 
-Convex versus non-convex optimization
----------------------------------------
+Optimización convexa versus no convexa
+--------------------------------------
 
 .. |convex_1d_1| image:: auto_examples/images/plot_convex_1.png
 
@@ -76,22 +75,22 @@ Convex versus non-convex optimization
  
    - |convex_1d_2|
 
- * - **A convex function**: 
+ * - **Una función convexa**: 
  
-     - `f` is above all its tangents.                    
-     - equivalently, for two point A, B, f(C) lies below the segment 
-       [f(A), f(B])], if A < C < B
+     - `f` está por encima de todas sus tangentes.
+     - de forma equivalente, para dos puntos A, B, f(C) queda debajo del
+       segmento [f(A), f(B])], si A < C < B
 
-   - **A non-convex function**
+   - **Una función no convexa**
 
-**Optimizing convex functions is easy. Optimizing non-convex functions can
-be very hard.**
+**Optimizar funciones convexas es fácil. Optimizar funciones no convexas
+puede ser muy difícil.**
 
-.. note:: A convex function provably has only one minimum, no local
-   minimums
+.. note:: Una función convexa probablemente tiene solo un mínimo, sin
+          mínimos locales.
 
-Smooth and non-smooth problems
--------------------------------
+Problemas continuamente diferenciables y con discontinuidades
+-------------------------------------------------------------
 
 .. |smooth_1d_1| image:: auto_examples/images/plot_smooth_1.png
 
@@ -103,44 +102,50 @@ Smooth and non-smooth problems
  
    - |smooth_1d_2|
 
- * - **A smooth function**: 
+ * - **Una función continuamente diferenciable**: 
 
-     The gradient is defined everywhere, and is a continuous function
+     El gradiente está definido en todos los puntos y es una función continua.
  
-   - **A non-smooth function**
+   - **Una función con discontinuidades**
 
-**Optimizing smooth functions is easier.**
+**Optimizar funciones continuamente diferenciables es más fácil.**
 
 
-Noisy versus exact cost functions
-----------------------------------
+Funciones de costo ruidosas versus exactas
+------------------------------------------
 
 .. |noisy| image:: auto_examples/images/plot_noisy_1.png
 
 .. list-table::
 
- * - Noisy (blue) and non-noisy (green) functions
+ * - Funciones ruidosa (azul) y sin ruido (verde)
  
    - |noisy|
 
-.. topic:: **Noisy gradients**
+.. topic:: **Gradientes ruidosos**
 
-   Many optimization methods rely on gradients of the objective function.
+   Muchos métodos de optimización se basan en gradientes de la función objetivo.
+   Si el gradiente de la función no está dado, se calcula numéricamente,
+   lo que induce errores. En tal situación, incluso si la función objetivo no es ruidosa,
+
+.. La idea anterior está cortada en la versión original en inglés.
+   El texto original es:
+   "Many optimization methods rely on gradients of the objective function.
    If the gradient function is not given, they are computed numerically,
    which induces errors. In such situation, even if the objective
-   function is not noisy, 
+   function is not noisy,"
 
-Constraints
-------------
+Restricciones
+-------------
 
 .. |constraints| image:: auto_examples/images/plot_constraints_1.png
     :target: auto_examples/plot_constraints.html
 
 .. list-table::
 
- * - Optimizations under constraints
+ * - Optimización bajo restricciones.
 
-     Here: 
+     En este caso: 
      
      :math:`-1 < x_1 < 1`
      
@@ -149,14 +154,14 @@ Constraints
    - |constraints|
 
 
-A review of the different optimizers
-======================================
+Un repaso a los diferentes optimizadores
+========================================
 
-Getting started: 1D optimization
----------------------------------
+Primeros pasos: optimización unidimensional
+-------------------------------------------
 
-Use :func:`scipy.optimize.brent` to minimize 1D functions.
-It combines a bracketing strategy with a parabolic approximation.
+Usa :func:`scipy.optimize.brent` para minimizar funciones unidimensionales.
+Combina una estrategia de acotamiento (bracketing) con una aproximación parabólica.
 
 .. |1d_optim_1| image:: auto_examples/images/plot_1d_optim_1.png
    :scale: 90%
@@ -172,15 +177,15 @@ It combines a bracketing strategy with a parabolic approximation.
 
 .. list-table::
 
- * - **Brent's method on a quadratic function**: it converges in 3 iterations,
-     as the quadratic approximation is then exact.
+ * - **Método de Brent en una función cuadrática**: converge en 3 iteraciones,
+     it converges in 3 iterations, cuando la aproximación cuadrática es exacta.
 
    - |1d_optim_1|
  
    - |1d_optim_2|
 
- * - **Brent's method on a non-convex function**: note that the fact that the
-     optimizer avoided the local minimum is a matter of luck.
+ * - **Método de Brent en una función no convexan**: ten en cuenta que el
+     hecho de que el optimizador evite el mínimo local es cosa de suerte.
 
    - |1d_optim_3|
 
@@ -199,16 +204,16 @@ It combines a bracketing strategy with a parabolic approximation.
 
 .. note:: 
    
-   Brent's method can be used for optimization constraint to an
-   intervale using :func:`scipy.optimize.fminbound`
+   El método de Brent puede ser usado para optimización de una restricción de
+   un intervalo usando :func:`scipy.optimize.fminbound`.
 
 .. note::
    
-   In scipy 0.11, :func:`scipy.optimize.minimize_scalar` gives a generic
-   interface to 1D scalar minimization
+   En Scipy 0.11, :func:`scipy.optimize.minimize_scalar` entrega una interfaz
+   genérica para minimización unidimensional.
 
-Gradient based methods
------------------------
+Métodos basados en la gradiente
+-------------------------------
 
 Some intuitions about gradient descent
 .......................................
@@ -1010,4 +1015,3 @@ and `g(x)< 0`.
    problems can be converted to non-constrained optimization problems
    using a mathematical trick known as `Lagrange multipliers
    <http://en.wikipedia.org/wiki/Lagrange_multiplier>`_.
-   
